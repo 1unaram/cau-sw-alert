@@ -1,0 +1,3 @@
+*.log
+api_keys.env
+data.json
