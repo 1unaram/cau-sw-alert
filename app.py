@@ -15,16 +15,6 @@ existing_uids = set()
 new_uids = set()
 
 
-def init():
-    try:
-        with open("error.log", "w", encoding='utf-8') as error_log:
-            error_log.write("")  # Clear the error log file
-        with open("data.json", "w", encoding='utf-8') as data_file:
-            data_file.write("{}") # Initialize empty JSON object
-    except Exception as e:
-        print(f"Error occurred during initialization: {str(e)}")
-
-
 def add_new_uids():
     global new_uids
 
@@ -57,6 +47,7 @@ def fetch_previous_data():
             else:
                 existing_uids = set()
     except FileNotFoundError:
+        print("data.json not found. Starting with an empty set of existing UIDs.")
         existing_uids = set()
     except Exception as e:
         with open("error.log", "a", encoding='utf-8') as error_log:
@@ -161,7 +152,6 @@ def fetch_posts(type):
 
 
 if __name__ == "__main__":
-    init()
     fetch_previous_data()
     fetch_posts('Notice')
     fetch_posts('Employment')
