@@ -9,9 +9,7 @@ echo "$(date): Starting setup process..."
 echo "$(date): Installing required packages..."
 pip3 install requests beautifulsoup4 python-dotenv
 
-# init.py 실행
-echo "$(date): Running initialization..."
-python3 init.py
+echo ""
 
 # API 키 파일 확인 및 생성
 if [ ! -f "api_keys.env" ]; then
