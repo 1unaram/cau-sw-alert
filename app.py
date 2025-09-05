@@ -78,7 +78,7 @@ def create_page_to_database(item, type):
             },
             "Date": {
                 "date": {
-                    "start": datetime.datetime.strptime(item['date'], '%Y.%m.%d').date().isoformat()
+                    "start": item['date']
                 }
             },
             "Type": {
@@ -142,7 +142,53 @@ def fetch_posts(type):
             data[uid] = {
                 'title': title,
                 'url': post_url,
-                'date': date
+                'date': datetime.datetime.strptime(date, '%Y.%m.%d').date().isoformat()
+            }
+            new_uids.add(uid)
+
+        if data:
+            for item in data.keys():
+                create_page_to_database(data[item], type)
+
+
+def fetch_swedu(type):
+    global existing_uids, new_uids
+
+    base_url = 'https://swedu.cau.ac.kr/board'
+    url = base_url + '/list?boardtypeid=7&menuid=001005005'
+
+    response = requests.get(url)
+    response.encoding = 'utf-8'
+
+    if response.status_code != 200:
+        try:
+            with open("log", "a", encoding='utf-8') as log_file:
+                log_file.write(f"[{datetime.datetime.now()}] {response.status_code} - {response.text}\n")
+        except Exception as e:
+            with open("error.log", "a", encoding='utf-8') as error_log:
+                error_log.write(f"[{datetime.datetime.now()}] Error occurred: {str(e)}\n")
+    else:
+        html = response.text
+        soup = BeautifulSoup(html, 'html.parser')
+        table = soup.find('table')
+        rows = table.find_all('tr')[1:]
+
+        data = {}
+        for row in rows:
+            col = row.find('td', class_='tl').find('a')
+            uid = type[0] + col['href'].split('boardid=')[1].split('&')[0]
+
+            if uid in existing_uids:
+                continue
+
+            title = col.get_text(strip=True)
+            post_url = base_url  + col['href']
+            date = row.find_all('td')[2].get_text(strip=True)
+
+            data[uid] = {
+                'title': title,
+                'url': post_url,
+                'date': datetime.datetime.strptime(date, '%Y-%m-%d').date().isoformat()
             }
             new_uids.add(uid)
 
@@ -155,4 +201,5 @@ if __name__ == "__main__":
     fetch_previous_data()
     fetch_posts('Notice')
     fetch_posts('Employment')
+    fetch_swedu('SWEdu')
     add_new_uids()
