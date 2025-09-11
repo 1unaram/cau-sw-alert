@@ -182,7 +182,7 @@ def fetch_swedu(type):
                 continue
 
             title = col.get_text(strip=True)
-            post_url = base_url  + col['href']
+            post_url = base_url  + col['href'][1:]
             date = row.find_all('td')[2].get_text(strip=True)
 
             data[uid] = {
