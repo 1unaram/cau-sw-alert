@@ -110,6 +110,8 @@ def fetch_posts(type):
         url = 'https://cse.cau.ac.kr/sub05/sub0501.php'
     elif type == 'Employment':
         url = 'https://cse.cau.ac.kr/sub05/sub0502.php'
+    elif type == 'Contest':
+        url = 'https://cse.cau.ac.kr/sub05/sub0506.php'
 
     response = requests.get(url)
     response.encoding = 'utf-8'
@@ -199,7 +201,10 @@ def fetch_swedu(type):
 
 if __name__ == "__main__":
     fetch_previous_data()
+
     fetch_posts('Notice')
     fetch_posts('Employment')
+    fetch_posts('Contest')
     fetch_swedu('SWEdu')
+    
     add_new_uids()
