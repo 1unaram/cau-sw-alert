@@ -85,7 +85,16 @@ def create_page_to_database(item, type):
                 "select": {
                     "name": type
                 }
+            },
+            "Noti": {
+                "people": [
+                    {
+                    "object": "user",
+                    "id": "1f09f757af084252bebf1d0d170f38c9"
+                    }
+                ]
             }
+
         }
     }
     headers = {
