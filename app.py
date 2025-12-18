@@ -102,6 +102,62 @@ def create_page_to_database(item, type):
             error_log.write(f"[{datetime.datetime.now()}] Error occurred while creating page: {str(e)}\n")
 
 
+def fetch_is_posts(type):
+    global existing_uids, new_uids
+
+    url = 'https://security.cau.ac.kr/board.htm?bbsid=notice'
+
+    response = requests.get(url)
+    response.encoding = 'euc-kr'
+
+    if response.status_code != 200:
+        try:
+            with open("log", "a", encoding='utf-8') as log_file:
+                log_file.write(f"[{datetime.datetime.now()}] {response.status_code} - {response.text}\n")
+        except Exception as e:
+            with open("error.log", "a", encoding='utf-8') as error_log:
+                error_log.write(f"[{datetime.datetime.now()}] Error occurred: {str(e)}\n")
+    else:
+        html = response.text
+        soup = BeautifulSoup(html, 'html.parser')
+        table = soup.find('table', class_='listTable')
+        tbody = table.find('tbody')
+        rows = tbody.find_all('tr')
+
+        data = {}
+        for row in rows:
+            cols = row.find_all('td')
+
+            # 공지는 건너뛰기
+            if cols[0].find('img'):
+                continue
+
+            # [1] 번호
+            uid = 'ISN' + cols[0].text.strip()
+            if uid in existing_uids:
+                continue
+
+            # [2] 제목
+            title = cols[1].find('a').get_text(strip=True).strip()
+
+            # [3] URL
+            post_url = 'https://security.cau.ac.kr/board.htm' + cols[1].find('a')['href']
+
+            # [4] 날짜
+            date = cols[3].get_text(strip=True)
+
+            data[uid] = {
+                'title': title,
+                'url': post_url,
+                'date': datetime.datetime.strptime(date, '%Y.%m.%d').date().isoformat()
+            }
+            new_uids.add(uid)
+
+        if data:
+            for item in data.keys():
+                create_page_to_database(data[item], type)
+
+
 def fetch_posts(type):
     global existing_uids, new_uids
 
@@ -202,9 +258,10 @@ def fetch_swedu(type):
 if __name__ == "__main__":
     fetch_previous_data()
 
-    fetch_posts('Notice')
-    fetch_posts('Employment')
-    fetch_posts('Contest')
-    fetch_swedu('SWEdu')
-    
+    # fetch_posts('Notice')
+    # fetch_posts('Employment')
+    # fetch_posts('Contest')
+    # fetch_swedu('SWEdu')
+    fetch_is_posts('ISNotice')
+
     add_new_uids()
