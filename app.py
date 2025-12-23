@@ -267,10 +267,10 @@ def fetch_swedu(type):
 if __name__ == "__main__":
     fetch_previous_data()
 
-    # fetch_posts('Notice')
-    # fetch_posts('Employment')
-    # fetch_posts('Contest')
-    # fetch_swedu('SWEdu')
+    fetch_posts('Notice')
+    fetch_posts('Employment')
+    fetch_posts('Contest')
+    fetch_swedu('SWEdu')
     fetch_is_posts('ISNotice')
 
     add_new_uids()
