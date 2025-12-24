@@ -5,7 +5,7 @@
 cd "$(dirname "$0")"
 
 # app.py 실행
-python3 app.py
+python3 app/app.py
 
 echo "$(date): Execution completed" >> cron.log
 echo "---" >> cron.log

@@ -1,15 +1,10 @@
 import datetime
 import json
-import os
 
 import requests
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
 
-load_dotenv("api_keys.env")
-
-NOTION_API_KEY = os.getenv("NOTION_API_KEY")
-DATABASE_ID = os.getenv("DATABASE_ID")
+from app.notion import create_page_to_database
 
 existing_uids = set()
 new_uids = set()
@@ -31,8 +26,7 @@ def add_new_uids():
             json.dump(data, data_file)
             data_file.truncate()
     except Exception as e:
-        with open("error.log", "a", encoding='utf-8') as error_log:
-            error_log.write(f"[{datetime.datetime.now()}] Error updating data.json: {str(e)}\n")
+        print(f"❌ [{datetime.datetime.now()}] Error updating data.json: {str(e)}")
 
 
 def fetch_previous_data():
@@ -50,65 +44,8 @@ def fetch_previous_data():
         print("data.json not found. Starting with an empty set of existing UIDs.")
         existing_uids = set()
     except Exception as e:
-        with open("error.log", "a", encoding='utf-8') as error_log:
-            error_log.write(f"[{datetime.datetime.now()}] Error reading data.json: {str(e)}\n")
+        print(f"❌ [{datetime.datetime.now()}] Error reading data.json: {str(e)}")
         existing_uids = set()
-
-
-def create_page_to_database(item, type):
-    payload = {
-        "parent": {
-            "database_id": DATABASE_ID
-        },
-        "properties": {
-            "Read": {
-                "checkbox": False
-            },
-            "Title": {
-                "title": [
-                    {
-                        "text": {
-                            "content": item['title']
-                        }
-                    }
-                ]
-            },
-            "URL": {
-                "url": item['url']
-            },
-            "Date": {
-                "date": {
-                    "start": item['date']
-                }
-            },
-            "Type": {
-                "select": {
-                    "name": type
-                }
-            },
-            "Noti": {
-                "people": [
-                    {
-                    "object": "user",
-                    "id": "1f09f757af084252bebf1d0d170f38c9"
-                    }
-                ]
-            }
-
-        }
-    }
-    headers = {
-        "accept": "application/json",
-        "content-type": "application/json",
-        'Authorization': f'Bearer {NOTION_API_KEY}',
-        'Notion-Version': '2022-06-28'
-    }
-
-    try:
-        response = requests.post(f"https://api.notion.com/v1/pages", json=payload, headers=headers)
-    except Exception as e:
-        with open("error.log", "a", encoding='utf-8') as error_log:
-            error_log.write(f"[{datetime.datetime.now()}] Error occurred while creating page: {str(e)}\n")
 
 
 def fetch_is_posts(type):
@@ -120,12 +57,7 @@ def fetch_is_posts(type):
     response.encoding = 'euc-kr'
 
     if response.status_code != 200:
-        try:
-            with open("log", "a", encoding='utf-8') as log_file:
-                log_file.write(f"[{datetime.datetime.now()}] {response.status_code} - {response.text}\n")
-        except Exception as e:
-            with open("error.log", "a", encoding='utf-8') as error_log:
-                error_log.write(f"[{datetime.datetime.now()}] Error occurred: {str(e)}\n")
+        print(f"❌ [{datetime.datetime.now()}] ISNotice fetch failed: {response.status_code}")
     else:
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')
@@ -182,12 +114,7 @@ def fetch_posts(type):
     response.encoding = 'utf-8'
 
     if response.status_code != 200:
-        try:
-            with open("log", "a", encoding='utf-8') as log_file:
-                log_file.write(f"[{datetime.datetime.now()}] {response.status_code} - {response.text}\n")
-        except Exception as e:
-            with open("error.log", "a", encoding='utf-8') as error_log:
-                error_log.write(f"[{datetime.datetime.now()}] Error occurred: {str(e)}\n")
+        print(f"❌ [{datetime.datetime.now()}] {type} fetch failed: {response.status_code}")
     else:
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')
@@ -228,12 +155,7 @@ def fetch_swedu(type):
     response.encoding = 'utf-8'
 
     if response.status_code != 200:
-        try:
-            with open("log", "a", encoding='utf-8') as log_file:
-                log_file.write(f"[{datetime.datetime.now()}] {response.status_code} - {response.text}\n")
-        except Exception as e:
-            with open("error.log", "a", encoding='utf-8') as error_log:
-                error_log.write(f"[{datetime.datetime.now()}] Error occurred: {str(e)}\n")
+        print(f"❌ [{datetime.datetime.now()}] SWEdu fetch failed: {response.status_code}")
     else:
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')

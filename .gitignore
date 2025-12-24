@@ -1,3 +1,4 @@
 *.log
-api_keys.env
-data.json
+notion_keys.env
+.venv/
+__pycache__/
