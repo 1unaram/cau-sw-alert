@@ -150,46 +150,50 @@ def update_env_file(database_id):
 
 # fetch한 데이터를 노션 데이터베이스에 페이지로 생성
 def create_page_to_database(item, type):
+    properties = {
+        "Read": {
+            "checkbox": False
+        },
+        "Title": {
+            "title": [
+                {
+                    "text": {
+                        "content": item['title']
+                    }
+                }
+            ]
+        },
+        "URL": {
+            "url": item['url']
+        },
+        "Date": {
+            "date": {
+                "start": item['date']
+            }
+        },
+        "Type": {
+            "select": {
+                "name": type
+            }
+        }
+    }
+
+    # PERSON_ID가 설정된 경우에만 Noti 필드 추가
+    if PERSON_ID:
+        properties["Noti"] = {
+            "people": [
+                {
+                    "object": "user",
+                    "id": PERSON_ID
+                }
+            ]
+        }
+
     payload = {
         "parent": {
             "database_id": DATABASE_ID
         },
-        "properties": {
-            "Read": {
-                "checkbox": False
-            },
-            "Title": {
-                "title": [
-                    {
-                        "text": {
-                            "content": item['title']
-                        }
-                    }
-                ]
-            },
-            "URL": {
-                "url": item['url']
-            },
-            "Date": {
-                "date": {
-                    "start": item['date']
-                }
-            },
-            "Type": {
-                "select": {
-                    "name": type
-                }
-            },
-            "Noti": {
-                "people": [
-                    {
-                    "object": "user",
-                    "id": PERSON_ID
-                    }
-                ]
-            }
-
-        }
+        "properties": properties
     }
     headers = {
         "accept": "application/json",

@@ -49,6 +49,7 @@ echo "$(date): data.json created successfully."
 
 # ============ [5] run_app.sh에 실행 권한 부여 ============
 chmod +x run_app.sh
+chmod +x remove_cron.sh
 
 echo "$(date): Setup complete!"
 echo ""
