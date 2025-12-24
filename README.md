@@ -1,65 +1,82 @@
-# CAU SW Notice - 자동 실행 설정
+# CAU SW Notice
 
-## 자동 설정 (권장)
+중앙대학교 소프트웨어학부 공지사항 자동 수집 → Notion 데이터베이스 업로드
+
+## 📋 수집 대상
+
+-   소프트웨어학부: 공지사항, 취업정보, 공모전
+-   SW교육원: 공지사항
+-   산업보안학과: 공지사항
+
+## 🚀 빠른 시작
+
+### 1. 초기 설정
 
 ```bash
 chmod +x setup.sh
 ./setup.sh
 ```
 
-이 명령으로 모든 설정이 자동 완료됩니다:
+### 2. API 키 설정
 
--   필요한 Python 패키지 설치
--   초기화 실행 (init.py)
--   **api_keys.env 파일 생성** (API 키 설정 필요)
--   crontab에 3시간마다 실행하는 작업 자동 등록
-
-## ⚠️ API 키 설정 (필수)
-
-설정 완료 후 `api_keys.env` 파일을 편집하여 실제 API 키를 입력하세요:
+`notion_keys.env` 파일 편집:
 
 ```bash
-vim api_keys.env
+NOTION_API_KEY=your_notion_api_key      # https://www.notion.so/my-integrations
+PARENT_PAGE_ID=your_parent_page_id      # 데이터베이스를 생성할 페이지 ID
+PERSON_ID=your_person_id                # (선택) 알림받을 사용자 ID
+DATABASE_ID=                            # 자동 생성됨
 ```
 
-필요한 값:
+### 3. 완료
 
--   **NOTION_API_KEY**: https://www.notion.so/my-integrations 에서 생성
--   **DATABASE_ID**: Notion 데이터베이스 URL에서 복사
+-   데이터베이스가 자동 생성되고 `DATABASE_ID`가 저장됩니다
+-   crontab에 자동 등록되어 6, 9, 12, 15, 18, 21시에 실행됩니다
 
-## 수동 crontab 관리
+## 📁 프로젝트 구조
+
+```
+cau-sw-notice/
+├── app/
+│   ├── app.py          # 메인 크롤링 스크립트
+│   └── notion.py       # Notion API (DB 생성 + 페이지 추가)
+├── setup.sh            # 초기 설정 스크립트
+├── run_app.sh          # 앱 실행 스크립트 (cron용)
+├── remove_cron.sh      # crontab 제거 스크립트
+├── data.json           # 수집된 게시물 ID 저장
+└── notion_keys.env     # API 키 설정 파일
+```
+
+## 🔧 관리 명령어
+
+### 수동 실행
+
+```bash
+python3 app/app.py
+```
 
 ### crontab 제거
 
 ```bash
-chmod +x remove_cron.sh
 ./remove_cron.sh
 ```
 
-### 현재 crontab 확인
+### crontab 확인
 
 ```bash
 crontab -l
 ```
 
-## 로그 확인
+### 실행 주기 변경
 
--   `cron.log`: crontab 실행 로그 (표준 출력)
--   `app_cron.log`: run_app.sh 실행 로그
--   `log.log`: 애플리케이션 로그
--   `error.log`: 에러 로그
+`setup.sh`의 `CRON_JOB` 변수 수정 후 재실행
 
-## 실행 주기 변경
+```bash
+# 예시
+0 */3 * * *        # 3시간마다
+0 9,15,21 * * *    # 9시, 15시, 21시
+```
 
-crontab 항목을 수정하려면:
+## 📝 로그
 
-1. `./remove_cron.sh`로 기존 항목 제거
-2. `setup.sh`에서 CRON_JOB 변수 수정
-3. `./setup.sh` 재실행
-
-### 시간 설정 예시
-
--   `0 */3 * * *`: 3시간마다 (현재 설정)
--   `0 */6 * * *`: 6시간마다
--   `0 9,15,21 * * *`: 매일 9시, 15시, 21시에만
--   `0 0 * * *`: 매일 자정에
+-   `cron.log`: 전체 실행 로그

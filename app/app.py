@@ -187,12 +187,22 @@ def fetch_swedu(type):
 
 
 if __name__ == "__main__":
+
     fetch_previous_data()
 
+    # 소프트웨어학부 공지사항
     fetch_posts('Notice')
+
+    # 소프트웨어학부 취업정보
     fetch_posts('Employment')
+
+    # 소프트웨어학부 공모전 소식
     fetch_posts('Contest')
+
+    # SW교육원 공지사항
     fetch_swedu('SWEdu')
+
+    # 산업보안학과 공지사항
     fetch_is_posts('ISNotice')
 
     add_new_uids()
