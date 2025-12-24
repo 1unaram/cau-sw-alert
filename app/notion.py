@@ -43,6 +43,38 @@ def create_notion_database():
     print(f"✅ 부모 페이지 ID 사용: {PARENT_PAGE_ID}")
 
     # 데이터베이스 생성
+    properties = {
+        "Title": {
+            "title": {}
+        },
+        "URL": {
+            "url": {}
+        },
+        "Date": {
+            "date": {}
+        },
+        "Type": {
+            "select": {
+                "options": [
+                    {"name": "Notice", "color": "blue"},
+                    {"name": "Employment", "color": "green"},
+                    {"name": "Contest", "color": "yellow"},
+                    {"name": "SWedu", "color": "purple"},
+                    {"name": "ISNotice", "color": "red"}
+                ]
+            }
+        },
+        "Read": {
+            "checkbox": {}
+        }
+    }
+
+    # PERSON_ID가 있으면 Noti 필드 추가
+    if PERSON_ID:
+        properties["Noti"] = {
+            "people": {}
+        }
+
     database_payload = {
         "parent": {
             "type": "page_id",
@@ -56,38 +88,10 @@ def create_notion_database():
                 }
             }
         ],
-        "properties": {
-            "Title": {
-                "title": {}
-            },
-            "URL": {
-                "url": {}
-            },
-            "Date": {
-                "date": {}
-            },
-            "Type": {
-                "select": {
-                    "options": [
-                        {"name": "Notice", "color": "blue"},
-                        {"name": "Employment", "color": "green"},
-                        {"name": "Contest", "color": "yellow"},
-                        {"name": "SWedu", "color": "purple"},
-                        {"name": "ISNotice", "color": "red"}
-                    ]
-                }
-            },
-            "Read": {
-                "checkbox": {}
-            }
+        "initial_data_source": {
+            "properties": properties
         }
     }
-
-    # PERSON_ID가 있으면 Noti 필드 추가
-    if PERSON_ID:
-        database_payload["properties"]["Noti"] = {
-            "people": {}
-        }
 
     try:
         create_response = requests.post(
