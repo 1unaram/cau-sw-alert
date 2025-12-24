@@ -3,8 +3,7 @@ import json
 
 import requests
 from bs4 import BeautifulSoup
-
-from app.notion import create_page_to_database
+from notion import create_page_to_database
 
 existing_uids = set()
 new_uids = set()
