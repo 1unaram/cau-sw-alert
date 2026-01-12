@@ -1,5 +1,6 @@
 import datetime
 import json
+from turtle import title
 
 import requests
 from bs4 import BeautifulSoup
@@ -45,6 +46,56 @@ def fetch_previous_data():
     except Exception as e:
         print(f"❌ [{datetime.datetime.now()}] Error reading data.json: {str(e)}")
         existing_uids = set()
+
+
+
+def fetch_kofia_posts():
+    global existing_uids, new_uids
+
+    base_url = 'https://www.kofia.or.kr/brd/m_96/list.do'
+
+    response = requests.get(base_url)
+    response.encoding = 'utf-8'
+
+    if response.status_code != 200:
+        print(f"❌ [{datetime.datetime.now()}] KOFIA fetch failed: {response.status_code}")
+    else:
+        html = response.text
+        soup = BeautifulSoup(html, 'html.parser')
+        table = soup.find('table', class_='common2 mgb25')
+        rows = table.find_all('tr')[1:]
+
+        data = {}
+        for row in rows:
+            cols = row.find_all('td')
+
+            # [1] 번호
+            uid = 'KOFIA' + cols[0].text.strip()
+            if uid in existing_uids:
+                continue
+
+            # [2] 회사명
+            company = cols[1].text.strip()
+
+            # [3] 제목
+            title = cols[2].text.strip()
+
+            # [3] URL
+            post_url = base_url + cols[2].find('a')['href']
+
+            # [4] 날짜
+            date = cols[4].get_text(strip=True)
+
+            data[uid] = {
+                'title': title,
+                'url': post_url,
+                'date': datetime.datetime.strptime(date, '%Y-%m-%d').date().isoformat()
+            }
+            new_uids.add(uid)
+
+        if data:
+            for item in data.keys():
+                create_page_to_database(data[item], 'KOFIA')
 
 
 def fetch_is_posts(type):
@@ -203,5 +254,8 @@ if __name__ == "__main__":
 
     # 산업보안학과 공지사항
     fetch_is_posts('ISNotice')
+
+    # 금융투자협회 채용 공고
+    fetch_kofia_posts()
 
     add_new_uids()
