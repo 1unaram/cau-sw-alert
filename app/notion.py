@@ -210,7 +210,8 @@ def create_page_to_notion_database(item, type, new_uids):
         response = requests.post(f"https://api.notion.com/v1/pages", json=payload, headers=headers)
 
         if response.status_code != 200:
-            print(f"❌ [{datetime.datetime.now()}] Failed to create Notion page: {response.status_code} - {response.text[:100]}")
+            print(f"❌ [{datetime.datetime.now()}] Failed to create Notion page: {response.status_code} - {response.text[:200]}")
+            return
 
         new_uids.add(item['uid'])
     except Exception as e:
