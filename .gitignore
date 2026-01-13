@@ -2,3 +2,4 @@
 notion_keys.env
 .venv/
 __pycache__/
+data.json
