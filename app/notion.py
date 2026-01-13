@@ -153,7 +153,7 @@ def update_env_file(database_id):
 
 
 # fetch한 데이터를 노션 데이터베이스에 페이지로 생성
-def create_page_to_database(item, type):
+def create_page_to_notion_database(item, type, new_uids):
     properties = {
         "Read": {
             "checkbox": False
@@ -208,8 +208,11 @@ def create_page_to_database(item, type):
 
     try:
         response = requests.post(f"https://api.notion.com/v1/pages", json=payload, headers=headers)
+
         if response.status_code != 200:
             print(f"❌ [{datetime.datetime.now()}] Failed to create Notion page: {response.status_code} - {response.text[:100]}")
+
+        new_uids.add(item['uid'])
     except Exception as e:
         print(f"❌ [{datetime.datetime.now()}] Error creating Notion page: {str(e)}")
 
