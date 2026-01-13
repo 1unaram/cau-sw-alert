@@ -3,7 +3,7 @@ import json
 
 import requests
 from bs4 import BeautifulSoup
-from notion import create_page_to_database
+from notion import create_page_to_notion_database
 
 existing_uids = set()
 new_uids = set()
@@ -64,6 +64,8 @@ def fetch_kofia_posts():
         table = soup.find('table', class_='common2 mgb25')
         rows = table.find_all('tr')[1:]
 
+        print(rows)
+
         data = {}
         for row in rows:
             cols = row.find_all('td')
@@ -78,6 +80,8 @@ def fetch_kofia_posts():
 
             # [3] 제목
             title = cols[2].text.strip()
+            if not any(keyword in title for keyword in ['정보보호', '보안', '보호', '해킹', '취약점', '사이버', '네트워크', 'IT', '정보보안']):
+                continue
 
             # [3] URL
             post_url = base_url + cols[2].find('a')['href']
@@ -88,13 +92,15 @@ def fetch_kofia_posts():
             data[uid] = {
                 'title': title,
                 'url': post_url,
-                'date': datetime.datetime.strptime(date, '%Y-%m-%d').date().isoformat()
+                'date': datetime.datetime.strptime(date, '%Y-%m-%d').date().isoformat(),
+                'uid': uid
             }
-            new_uids.add(uid)
+
+        print(data)
 
         if data:
             for item in data.keys():
-                create_page_to_database(data[item], 'KOFIA')
+                create_page_to_notion_database(data[item], 'KOFIA', new_uids)
 
 
 def fetch_is_posts(type):
@@ -139,13 +145,13 @@ def fetch_is_posts(type):
             data[uid] = {
                 'title': title,
                 'url': post_url,
-                'date': datetime.datetime.strptime(date, '%Y.%m.%d').date().isoformat()
+                'date': datetime.datetime.strptime(date, '%Y.%m.%d').date().isoformat(),
+                'uid': uid
             }
-            new_uids.add(uid)
 
         if data:
             for item in data.keys():
-                create_page_to_database(data[item], type)
+                create_page_to_notion_database(data[item], type, new_uids)
 
 
 def fetch_posts(type):
@@ -185,13 +191,13 @@ def fetch_posts(type):
             data[uid] = {
                 'title': title,
                 'url': post_url,
-                'date': datetime.datetime.strptime(date, '%Y.%m.%d').date().isoformat()
+                'date': datetime.datetime.strptime(date, '%Y.%m.%d').date().isoformat(),
+                'uid': uid
             }
-            new_uids.add(uid)
 
         if data:
             for item in data.keys():
-                create_page_to_database(data[item], type)
+                create_page_to_notion_database(data[item], type, new_uids)
 
 
 def fetch_swedu(type):
@@ -226,13 +232,13 @@ def fetch_swedu(type):
             data[uid] = {
                 'title': title,
                 'url': post_url,
-                'date': datetime.datetime.strptime(date, '%Y-%m-%d').date().isoformat()
+                'date': datetime.datetime.strptime(date, '%Y-%m-%d').date().isoformat(),
+                'uid': uid
             }
-            new_uids.add(uid)
 
         if data:
             for item in data.keys():
-                create_page_to_database(data[item], type)
+                create_page_to_notion_database(data[item], type, new_uids)
 
 
 if __name__ == "__main__":
