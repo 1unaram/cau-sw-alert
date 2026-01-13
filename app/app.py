@@ -1,6 +1,5 @@
 import datetime
 import json
-from turtle import title
 
 import requests
 from bs4 import BeautifulSoup
