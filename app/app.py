@@ -64,8 +64,6 @@ def fetch_kofia_posts():
         table = soup.find('table', class_='common2 mgb25')
         rows = table.find_all('tr')[1:]
 
-        print(rows)
-
         data = {}
         for row in rows:
             cols = row.find_all('td')
@@ -95,8 +93,6 @@ def fetch_kofia_posts():
                 'date': datetime.datetime.strptime(date, '%Y-%m-%d').date().isoformat(),
                 'uid': uid
             }
-
-        print(data)
 
         if data:
             for item in data.keys():
