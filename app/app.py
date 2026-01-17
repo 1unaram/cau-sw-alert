@@ -82,7 +82,7 @@ def fetch_kofia_posts():
                 continue
 
             # [3] URL
-            post_url = base_url + cols[2].find('a')['href']
+            post_url = 'https://www.kofia.or.kr/brd/m_96/view.do?seq=' + str(int(uid) + 7422)
 
             # [4] 날짜
             date = cols[4].get_text(strip=True)
