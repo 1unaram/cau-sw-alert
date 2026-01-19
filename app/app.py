@@ -52,51 +52,57 @@ def fetch_kofia_posts():
     global existing_uids, new_uids
 
     base_url = 'https://www.kofia.or.kr/brd/m_96/list.do'
+    urls = [
+        'https://www.kofia.or.kr/brd/m_96/list.do?page=3',
+        'https://www.kofia.or.kr/brd/m_96/list.do?page=2',
+        'https://www.kofia.or.kr/brd/m_96/list.do?page=1',
+        ]
 
-    response = requests.get(base_url)
-    response.encoding = 'utf-8'
+    for url in urls:
+        response = requests.get(url)
+        response.encoding = 'utf-8'
 
-    if response.status_code != 200:
-        print(f"❌ [{datetime.datetime.now()}] KOFIA fetch failed: {response.status_code}")
-    else:
-        html = response.text
-        soup = BeautifulSoup(html, 'html.parser')
-        table = soup.find('table', class_='common2 mgb25')
-        rows = table.find_all('tr')[1:]
+        if response.status_code != 200:
+            print(f"❌ [{datetime.datetime.now()}] KOFIA fetch failed: {response.status_code}")
+        else:
+            html = response.text
+            soup = BeautifulSoup(html, 'html.parser')
+            table = soup.find('table', class_='common2 mgb25')
+            rows = table.find_all('tr')[1:]
 
-        data = {}
-        for row in rows:
-            cols = row.find_all('td')
+            data = {}
+            for row in rows:
+                cols = row.find_all('td')
 
-            # [1] 번호
-            uid = 'KOFIA' + cols[0].text.strip()
-            if uid in existing_uids:
-                continue
+                # [1] 번호
+                uid = 'KOFIA' + cols[0].text.strip()
+                if uid in existing_uids:
+                    continue
 
-            # [2] 회사명
-            company = cols[1].text.strip()
+                # [2] 회사명
+                company = cols[1].text.strip()
 
-            # [3] 제목
-            title = cols[2].text.strip()
-            if not any(keyword in title for keyword in ['정보보호', '보안', '보호', '해킹', '취약점', '사이버', '네트워크', 'IT', '정보보안']):
-                continue
+                # [3] 제목
+                title = cols[2].text.strip()
+                if not any(keyword in title for keyword in ['정보보호', '보안', '보호', '해킹', '취약점', '사이버', '네트워크', 'IT', '정보보안']):
+                    continue
 
-            # [3] URL
-            post_url = base_url + cols[2].find('a')['href']
+                # [3] URL
+                post_url = base_url + cols[2].find('a')['href']
 
-            # [4] 날짜
-            date = cols[4].get_text(strip=True)
+                # [4] 날짜
+                date = cols[4].get_text(strip=True)
 
-            data[uid] = {
-                'title': title,
-                'url': post_url,
-                'date': datetime.datetime.strptime(date, '%Y-%m-%d').date().isoformat(),
-                'uid': uid
-            }
+                data[uid] = {
+                    'title': title,
+                    'url': post_url,
+                    'date': datetime.datetime.strptime(date, '%Y-%m-%d').date().isoformat(),
+                    'uid': uid
+                }
 
-        if data:
-            for item in data.keys():
-                create_page_to_notion_database(data[item], 'KOFIA', new_uids)
+            if data:
+                for item in data.keys():
+                    create_page_to_notion_database(data[item], 'KOFIA', new_uids)
 
 
 def fetch_is_posts(type):
