@@ -89,7 +89,6 @@ def fetch_kofia_posts():
 
                 # [3] URL
                 post_url = 'https://www.kofia.or.kr/brd/m_96' + cols[2].find('a')['href'][1:]
-                print(post_url)
 
                 # [4] 날짜
                 date = cols[4].get_text(strip=True)
@@ -248,20 +247,20 @@ if __name__ == "__main__":
 
     fetch_previous_data()
 
-    # # 소프트웨어학부 공지사항
-    # fetch_posts('Notice')
+    # 소프트웨어학부 공지사항
+    fetch_posts('Notice')
 
-    # # 소프트웨어학부 취업정보
-    # fetch_posts('Employment')
+    # 소프트웨어학부 취업정보
+    fetch_posts('Employment')
 
-    # # 소프트웨어학부 공모전 소식
-    # fetch_posts('Contest')
+    # 소프트웨어학부 공모전 소식
+    fetch_posts('Contest')
 
-    # # SW교육원 공지사항
-    # fetch_swedu('SWEdu')
+    # SW교육원 공지사항
+    fetch_swedu('SWEdu')
 
-    # # 산업보안학과 공지사항
-    # fetch_is_posts('ISNotice')
+    # 산업보안학과 공지사항
+    fetch_is_posts('ISNotice')
 
     # 금융투자협회 채용 공고
     fetch_kofia_posts()
