@@ -103,6 +103,7 @@ def fetch_kofia_posts():
             if data:
                 for item in data.keys():
                     create_page_to_notion_database(data[item], 'KOFIA', new_uids)
+                    existing_uids.add(item)
 
 
 def fetch_is_posts(type):
