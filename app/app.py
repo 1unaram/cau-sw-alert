@@ -58,6 +58,8 @@ def fetch_kofia_posts():
         'https://www.kofia.or.kr/brd/m_96/list.do?page=1',
         ]
 
+    data = {}
+
     for url in urls:
         response = requests.get(url)
         response.encoding = 'utf-8'
@@ -70,7 +72,6 @@ def fetch_kofia_posts():
             table = soup.find('table', class_='common2 mgb25')
             rows = table.find_all('tr')[1:]
 
-            data = {}
             for row in rows:
                 cols = row.find_all('td')
 
@@ -100,10 +101,9 @@ def fetch_kofia_posts():
                     'uid': uid
                 }
 
-            if data:
-                for item in data.keys():
-                    create_page_to_notion_database(data[item], 'KOFIA', new_uids)
-                    existing_uids.add(item)
+    if data:
+        for item in data.keys():
+            create_page_to_notion_database(data[item], 'KOFIA', new_uids)
 
 
 def fetch_is_posts(type):
