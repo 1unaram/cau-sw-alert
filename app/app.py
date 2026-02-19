@@ -1,9 +1,15 @@
 import datetime
 import json
+import os
+import re
 
 import requests
 from bs4 import BeautifulSoup
 from notion import create_page_to_notion_database
+
+# 스크립트 위치 기준 절대 경로
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_FILE = os.path.join(BASE_DIR, 'data.json')
 
 existing_uids = set()
 new_uids = set()
@@ -12,8 +18,12 @@ new_uids = set()
 def add_new_uids():
     global new_uids
 
+    if not new_uids:
+        print("ℹ️  No new UIDs to add")
+        return
+
     try:
-        with open("data.json", "r+", encoding='utf-8') as data_file:
+        with open(DATA_FILE, "r+", encoding='utf-8') as data_file:
             existing_data = data_file.read()
             if existing_data:
                 data = json.loads(existing_data)
@@ -24,6 +34,9 @@ def add_new_uids():
             data_file.seek(0)
             json.dump(data, data_file)
             data_file.truncate()
+        kofia_new = [uid for uid in new_uids if uid.startswith('KOFIA')]
+        print(f"✅ Added {len(new_uids)} new UIDs to {DATA_FILE}")
+        print(f"   New KOFIA UIDs: {kofia_new}")
     except Exception as e:
         print(f"❌ [{datetime.datetime.now()}] Error updating data.json: {str(e)}")
 
@@ -32,15 +45,18 @@ def fetch_previous_data():
     global existing_uids
 
     try:
-        with open("data.json", "r", encoding='utf-8') as data_file:
+        with open(DATA_FILE, "r", encoding='utf-8') as data_file:
             existing_data = data_file.read()
             if existing_data:
                 data = json.loads(existing_data)
                 existing_uids = set(data.keys())
             else:
                 existing_uids = set()
+        print(f"✅ Loaded {len(existing_uids)} existing UIDs from {DATA_FILE}")
+        kofia_uids = [uid for uid in existing_uids if uid.startswith('KOFIA')]
+        print(f"   KOFIA UIDs: {len(kofia_uids)}")
     except FileNotFoundError:
-        print("data.json not found. Starting with an empty set of existing UIDs.")
+        print(f"data.json not found at {DATA_FILE}. Starting with an empty set of existing UIDs.")
         existing_uids = set()
     except Exception as e:
         print(f"❌ [{datetime.datetime.now()}] Error reading data.json: {str(e)}")
@@ -75,11 +91,6 @@ def fetch_kofia_posts():
             for row in rows:
                 cols = row.find_all('td')
 
-                # [1] 번호
-                uid = 'KOFIA' + cols[0].text.strip()
-                if uid in existing_uids:
-                    continue
-
                 # [2] 회사명
                 company = cols[1].text.strip()
 
@@ -88,8 +99,18 @@ def fetch_kofia_posts():
                 if not any(keyword in title for keyword in ['정보보호', '보안', '보호', '해킹', '취약점', '사이버', '네트워크', 'IT', '정보보안']):
                     continue
 
-                # [3] URL
-                post_url = 'https://www.kofia.or.kr/brd/m_96' + cols[2].find('a')['href'][1:]
+                # [3] URL 및 고유 ID 추출
+                href = cols[2].find('a')['href']
+                post_url = 'https://www.kofia.or.kr/brd/m_96' + href[1:]
+
+                # URL에서 seq 파라미터 추출하여 고유 ID로 사용
+                seq_match = re.search(r'seq=(\d+)', href)
+                if not seq_match:
+                    continue
+                uid = 'KOFIA' + seq_match.group(1)
+
+                if uid in existing_uids or uid in new_uids:
+                    continue
 
                 # [4] 날짜
                 date = cols[4].get_text(strip=True)
