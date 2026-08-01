@@ -7,7 +7,8 @@ echo "$(date): Starting setup process..."
 
 # ============ [1] 필요한 라이브러리 설치 (전역 환경에) ============
 echo "$(date): Installing required packages..."
-pip3 install requests beautifulsoup4 python-dotenv
+#pip3 install requests beautifulsoup4 python-dotenv
+./.venv/bin/pip install requests beautifulsoup4 python-dotenv
 echo ""
 
 
@@ -26,7 +27,7 @@ echo "$(date): Checking if Notion database needs to be created..."
 if grep -q "^DATABASE_ID=$" notion_keys.env || ! grep -q "^DATABASE_ID=" notion_keys.env; then
     echo "$(date): DATABASE_ID is empty. Creating Notion database automatically..."
     echo ""
-    python3 app/notion.py
+    ./.venv/bin/python app/notion.py
 
     if [ $? -ne 0 ]; then
         echo ""
