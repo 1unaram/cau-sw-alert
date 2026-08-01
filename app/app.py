@@ -240,7 +240,7 @@ def fetch_swedu(type):
     else:
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')
-        table = soup.find('table', class_='table_style1')
+        table = soup.find('table')
         rows = table.find_all('tr')[1:]
 
         data = {}
