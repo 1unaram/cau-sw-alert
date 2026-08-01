@@ -5,7 +5,7 @@ import sys
 import requests
 from dotenv import load_dotenv
 
-load_dotenv("notion_keys.env")
+load_dotenv("keys.env")
 
 NOTION_API_KEY = os.getenv("NOTION_API_KEY")
 DATABASE_ID = os.getenv("DATABASE_ID")
@@ -19,12 +19,12 @@ def create_notion_database():
     필요한 속성: Title, URL, Date, Type, Read, Noti
     """
     if not NOTION_API_KEY:
-        print("❌ ERROR: NOTION_API_KEY가 notion_keys.env에 설정되지 않았습니다.")
+        print("❌ ERROR: NOTION_API_KEY가 keys.env에 설정되지 않았습니다.")
         print("   https://www.notion.so/my-integrations 에서 API 키를 생성하세요.")
         sys.exit(1)
 
     if not PARENT_PAGE_ID:
-        print("❌ ERROR: PARENT_PAGE_ID가 notion_keys.env에 설정되지 않았습니다.")
+        print("❌ ERROR: PARENT_PAGE_ID가 keys.env에 설정되지 않았습니다.")
         print("   노션에서 데이터베이스를 생성할 부모 페이지 ID를 입력하세요.")
         print("   1. 노션 페이지를 열기")
         print("   2. URL에서 페이지 ID 복사 (예: https://notion.so/PAGE_ID)")
@@ -56,11 +56,13 @@ def create_notion_database():
         "Type": {
             "select": {
                 "options": [
-                    {"name": "Notice", "color": "blue"},
-                    {"name": "Employment", "color": "green"},
-                    {"name": "Contest", "color": "yellow"},
-                    {"name": "SWedu", "color": "purple"},
-                    {"name": "ISNotice", "color": "red"}
+                    {"name": "Notice", "color": "yellow"},
+                    {"name": "SWedu", "color": "yellow"},
+                    {"name": "ISNotice", "color": "yellow"},
+                    {"name": "Contest", "color": "blue"},
+                    {"name": "Employment", "color": "blue"},
+                    {"name": "KOFIA", "color": "blue"},
+                    {"name": "CampusRecruit", "color": "blue"},
                 ]
             }
         },
@@ -122,11 +124,11 @@ def create_notion_database():
 
 def update_env_file(database_id):
     """
-    notion_keys.env 파일에 DATABASE_ID를 업데이트합니다.
+    keys.env 파일에 DATABASE_ID를 업데이트합니다.
     """
     try:
         # 기존 파일 읽기
-        with open("notion_keys.env", "r", encoding="utf-8") as f:
+        with open("keys.env", "r", encoding="utf-8") as f:
             lines = f.readlines()
 
         # DATABASE_ID 업데이트
@@ -142,13 +144,13 @@ def update_env_file(database_id):
             lines.append(f"\nDATABASE_ID={database_id}\n")
 
         # 파일 쓰기
-        with open("notion_keys.env", "w", encoding="utf-8") as f:
+        with open("keys.env", "w", encoding="utf-8") as f:
             f.writelines(lines)
 
-        print(f"✅ notion_keys.env 파일에 DATABASE_ID 저장 완료!")
+        print(f"✅ keys.env 파일에 DATABASE_ID 저장 완료!")
 
     except Exception as e:
-        print(f"❌ ERROR: notion_keys.env 업데이트 중 오류: {str(e)}")
+        print(f"❌ ERROR: keys.env 업데이트 중 오류: {str(e)}")
         sys.exit(1)
 
 

@@ -1,12 +1,14 @@
 # CAU SW Notice
 
-중앙대학교 소프트웨어학부 공지사항 자동 수집 → Notion 데이터베이스 업로드
+중앙대학교 소프트웨어학부 공지사항 자동 수집 → Notion 데이터베이스 업로드 (Linux 서버 환경)
 
 ## 📋 수집 대상
 
--   소프트웨어학부: 공지사항, 취업정보, 공모전
--   SW교육원: 공지사항
--   산업보안학과: 공지사항
+- 소프트웨어학부: 공지사항, 취업정보, 공모전
+- SW교육원: 공지사항
+- 산업보안학과: 공지사항
+- 금융투자협회(KOFIA): IT·보안 관련 채용 공고
+- 캠퍼스리쿠르팅(rainbow.cau.ac.kr): 채용 공고 (로그인 필요)
 
 ## 🚀 빠른 시작
 
@@ -19,19 +21,23 @@ chmod +x setup.sh
 
 ### 2. API 키 설정
 
-`notion_keys.env` 파일 편집:
+`keys.env` 파일 편집:
 
 ```bash
 NOTION_API_KEY=your_notion_api_key      # https://www.notion.so/my-integrations
 PARENT_PAGE_ID=your_parent_page_id      # 데이터베이스를 생성할 페이지 ID
 PERSON_ID=your_person_id                # (선택) 알림받을 사용자 ID
 DATABASE_ID=                            # 자동 생성됨
+C_ID=your_cau_portal_id                 # (선택) 캠퍼스리쿠르팅 로그인 ID
+C_PW=your_cau_portal_password           # (선택) 캠퍼스리쿠르팅 로그인 비밀번호
 ```
+
+> C_ID/C_PW를 설정하지 않으면 캠퍼스리쿠르팅 수집은 건너뜁니다.
 
 ### 3. 완료
 
--   데이터베이스가 자동 생성되고 `DATABASE_ID`가 저장됩니다
--   crontab에 자동 등록되어 6, 9, 12, 15, 18, 21시에 실행됩니다
+- 데이터베이스가 자동 생성되고 `DATABASE_ID`가 저장됩니다
+- crontab에 자동 등록되어 6, 9, 12, 15, 18, 21시에 실행됩니다
 
 ## 📁 프로젝트 구조
 
@@ -44,7 +50,7 @@ cau-sw-notice/
 ├── run_app.sh          # 앱 실행 스크립트 (cron용)
 ├── remove_cron.sh      # crontab 제거 스크립트
 ├── data.json           # 수집된 게시물 ID 저장
-└── notion_keys.env     # API 키 설정 파일
+└── keys.env     # API 키 설정 파일
 ```
 
 ## 🔧 관리 명령어
@@ -79,4 +85,4 @@ crontab -l
 
 ## 📝 로그
 
--   `cron.log`: 전체 실행 로그
+- `cron.log`: 전체 실행 로그

@@ -13,18 +13,18 @@ echo ""
 
 
 # ============ [2] Notion Key 파일 확인 ============
-if [ ! -f notion_keys.env ]; then
-    echo "$(date): notion_keys.env not found. Creating from template..."
+if [ ! -f keys.env ]; then
+    echo "$(date): keys.env not found. Creating from template..."
     exit 1
 else
-    echo "$(date): notion_keys.env found."
+    echo "$(date): keys.env found."
 fi
 
 
 # ============ [3] 노션 데이터베이스 자동 생성 ============
 echo ""
 echo "$(date): Checking if Notion database needs to be created..."
-if grep -q "^DATABASE_ID=$" notion_keys.env || ! grep -q "^DATABASE_ID=" notion_keys.env; then
+if grep -q "^DATABASE_ID=$" keys.env || ! grep -q "^DATABASE_ID=" keys.env; then
     echo "$(date): DATABASE_ID is empty. Creating Notion database automatically..."
     echo ""
     ./.venv/bin/python app/notion.py
@@ -32,7 +32,7 @@ if grep -q "^DATABASE_ID=$" notion_keys.env || ! grep -q "^DATABASE_ID=" notion_
     if [ $? -ne 0 ]; then
         echo ""
         echo "❌ ERROR: Failed to create Notion database."
-        echo "   Please check your NOTION_API_KEY in notion_keys.env"
+        echo "   Please check your NOTION_API_KEY in keys.env"
         exit 1
     fi
 else

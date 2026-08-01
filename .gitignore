@@ -1,5 +1,6 @@
 *.log
-notion_keys.env
+keys.env
 .venv/
 __pycache__/
 data.json
+.claude/
