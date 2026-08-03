@@ -56,8 +56,6 @@ def fetch_previous_data():
             else:
                 existing_uids = set()
         print(f"✅ Loaded {len(existing_uids)} existing UIDs from {DATA_FILE}")
-        kofia_uids = [uid for uid in existing_uids if uid.startswith('KOFIA')]
-        print(f"   KOFIA UIDs: {len(kofia_uids)}")
     except FileNotFoundError:
         print(f"data.json not found at {DATA_FILE}. Starting with an empty set of existing UIDs.")
         existing_uids = set()
@@ -326,6 +324,9 @@ def fetch_campus_recruitment():
                 continue
 
             uid = 'CR' + uid_match.group(1)
+
+            if uid in existing_uids or uid in new_uids:
+                continue
 
             organization = cols[1].get_text(' ', strip=True)
             title = link.get_text(strip=True)
