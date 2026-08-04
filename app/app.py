@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
-from notion import create_page_to_notion_database
+from notion import create_page_to_notion_database, create_error_page
 from dotenv import load_dotenv
 
 # 스크립트 위치 기준 절대 경로
@@ -39,12 +39,11 @@ def add_new_uids():
             data_file.truncate()
         kofia_new = [uid for uid in new_uids if uid.startswith('KOFIA')]
         print(f"✅ Added {len(new_uids)} new UIDs to {DATA_FILE}")
-        print(f"   New KOFIA UIDs: {kofia_new}")
     except Exception as e:
         print(f"❌ [{datetime.datetime.now()}] Error updating data.json: {str(e)}")
 
 
-def fetch_previous_data():
+def load_previous_data():
     global existing_uids
 
     try:
@@ -234,7 +233,7 @@ def fetch_swedu(type):
     response.encoding = 'utf-8'
 
     if response.status_code != 200:
-        print(f"❌ [{datetime.datetime.now()}] SWEdu fetch failed: {response.status_code}")
+        print(f"❌ [{datetime.datetime.now()}] SWedu fetch failed: {response.status_code}")
     else:
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')
@@ -294,7 +293,7 @@ def fetch_campus_recruitment():
     elif 'autherror' in response.url or '로그인 해주세요' in response.text:
         print("❌ Campus Recruitment requires login")
         print("   Set C_ID and C_PW in environment (or keys.env) and run again.")
-        raise SystemExit(1)
+        raise RuntimeError("Campus Recruitment requires login")
     else:
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')
@@ -305,7 +304,7 @@ def fetch_campus_recruitment():
 
         if not table:
             print("❌ Campus Recruitment table not found")
-            raise SystemExit(1)
+            raise RuntimeError("Campus Recruitment table not found")
 
         rows = table.find_all('tr')[1:]
 
@@ -345,31 +344,43 @@ def fetch_campus_recruitment():
                 create_page_to_notion_database(data[item], 'CampusRecruit', new_uids)
 
 
+def run_step(label, func, *args, **kwargs):
+    """
+    fetch 함수 하나를 실행하고, 실패해도 다른 fetch에 영향이 없도록 예외를 격리한다.
+    실패 시 같은 Notion DB에 알림용 페이지를 생성해 원인을 확인할 수 있게 한다.
+    """
+    try:
+        func(*args, **kwargs)
+    except Exception as e:
+        print(f"❌ [{datetime.datetime.now()}] {label} step failed: {type(e).__name__}: {e}")
+        create_error_page(label, f"{type(e).__name__}: {e}")
+
+
 if __name__ == "__main__":
 
     # --- 기존 데이터 불러오기 ---
-    fetch_previous_data()
+    load_previous_data()
 
     # 1) 소프트웨어학부 공지사항
-    fetch_posts('Notice')
+    run_step('Notice', fetch_posts, 'Notice')
 
     # 2) 소프트웨어학부 취업정보
-    fetch_posts('Employment')
+    run_step('Employment', fetch_posts, 'Employment')
 
     # 3) 소프트웨어학부 공모전 소식
-    fetch_posts('Contest')
+    run_step('Contest', fetch_posts, 'Contest')
 
     # 4) SW교육원 공지사항
-    fetch_swedu('SWEdu')
+    run_step('SWedu', fetch_swedu, 'SWedu')
 
     # 5) 산업보안학과 공지사항
-    fetch_is_posts('ISNotice')
+    run_step('ISNotice', fetch_is_posts, 'ISNotice')
 
     # 6) 금융투자협회 채용 공고
-    fetch_kofia_posts()
+    run_step('KOFIA', fetch_kofia_posts)
 
     # 7) 캠퍼스리쿠르팅
-    fetch_campus_recruitment()
+    run_step('CampusRecruitment', fetch_campus_recruitment)
 
     # --- 새로운 UID를 data.json에 추가 ---
     add_new_uids()

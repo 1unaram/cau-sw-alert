@@ -220,6 +220,63 @@ def create_page_to_notion_database(item, type, new_uids):
         print(f"❌ [{datetime.datetime.now()}] Error creating Notion page: {str(e)}")
 
 
+# 수집 중 예외가 발생하면 원인 확인용 알림 페이지를 생성
+def create_error_page(source, error_message):
+    title = f"⚠️ [{source}] 수집 실패: {error_message}"[:200]
+
+    properties = {
+        "Read": {
+            "checkbox": False
+        },
+        "Title": {
+            "title": [
+                {
+                    "text": {
+                        "content": title
+                    }
+                }
+            ]
+        },
+        "Date": {
+            "date": {
+                "start": datetime.datetime.now().isoformat()
+            }
+        }
+    }
+
+    # PERSON_ID가 설정된 경우에만 Noti 필드 추가
+    if PERSON_ID:
+        properties["Noti"] = {
+            "people": [
+                {
+                    "object": "user",
+                    "id": PERSON_ID
+                }
+            ]
+        }
+
+    payload = {
+        "parent": {
+            "database_id": DATABASE_ID
+        },
+        "properties": properties
+    }
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        'Authorization': f'Bearer {NOTION_API_KEY}',
+        'Notion-Version': '2025-09-03'
+    }
+
+    try:
+        response = requests.post("https://api.notion.com/v1/pages", json=payload, headers=headers)
+
+        if response.status_code != 200:
+            print(f"❌ [{datetime.datetime.now()}] Failed to create error notification page: {response.status_code} - {response.text[:200]}")
+    except Exception as e:
+        print(f"❌ [{datetime.datetime.now()}] Error creating Notion error page: {str(e)}")
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("CAU SW Notice - 노션 데이터베이스 자동 생성")
