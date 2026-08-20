@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 import re
+import time
 from urllib.parse import urljoin
 
 import requests
@@ -16,6 +17,23 @@ DATA_FILE = os.path.join(BASE_DIR, 'data.json')
 
 existing_uids = set()
 new_uids = set()
+
+
+def request_with_retry(func, *args, retries=3, delay=5, **kwargs):
+    """
+    일시적인 연결 오류(Connection refused, timeout 등)로 인한 실패를 흡수하기 위해
+    지정한 요청 함수를 최대 retries회까지 재시도한다. 모두 실패하면 마지막 예외를 그대로 던진다.
+    """
+    last_exc = None
+    for attempt in range(1, retries + 1):
+        try:
+            return func(*args, **kwargs)
+        except requests.exceptions.RequestException as e:
+            last_exc = e
+            print(f"⚠️  [{datetime.datetime.now()}] Request failed (attempt {attempt}/{retries}): {e}")
+            if attempt < retries:
+                time.sleep(delay)
+    raise last_exc
 
 
 def add_new_uids():
@@ -76,7 +94,7 @@ def fetch_kofia_posts():
     data = {}
 
     for url in urls:
-        response = requests.get(url)
+        response = request_with_retry(requests.get, url)
         response.encoding = 'utf-8'
 
         if response.status_code != 200:
@@ -131,7 +149,7 @@ def fetch_is_posts(type):
 
     url = 'https://security.cau.ac.kr/board.htm?bbsid=notice'
 
-    response = requests.get(url)
+    response = request_with_retry(requests.get, url)
     response.encoding = 'euc-kr'
 
     if response.status_code != 200:
@@ -188,7 +206,7 @@ def fetch_posts(type):
     elif type == 'Contest':
         url = 'https://cse.cau.ac.kr/sub05/sub0506.php'
 
-    response = requests.get(url)
+    response = request_with_retry(requests.get, url)
     response.encoding = 'utf-8'
 
     if response.status_code != 200:
@@ -229,7 +247,7 @@ def fetch_swedu(type):
     base_url = 'https://swedu.cau.ac.kr/board'
     url = base_url + '/list?boardtypeid=7&menuid=001005005'
 
-    response = requests.get(url)
+    response = request_with_retry(requests.get, url)
     response.encoding = 'utf-8'
 
     if response.status_code != 200:
@@ -275,7 +293,8 @@ def fetch_campus_recruitment():
     user_id = os.getenv('C_ID')
     user_pw = os.getenv('C_PW')
     if user_id and user_pw:
-        session.post(
+        request_with_retry(
+            session.post,
             login_url,
             data={
                 'prevurl': '/site/program/recruit/listCampusRecruit',
@@ -285,7 +304,7 @@ def fetch_campus_recruitment():
             }
         )
 
-    response = session.get(base_url)
+    response = request_with_retry(session.get, base_url)
     response.encoding = 'utf-8'
 
     if response.status_code != 200:
