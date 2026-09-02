@@ -92,6 +92,7 @@ def fetch_kofia_posts():
         ]
 
     data = {}
+    errors = []
 
     for url in urls:
         response = request_with_retry(requests.get, url)
@@ -99,6 +100,7 @@ def fetch_kofia_posts():
 
         if response.status_code != 200:
             print(f"❌ [{datetime.datetime.now()}] KOFIA fetch failed: {response.status_code}")
+            errors.append(f"HTTP {response.status_code} ({url})")
         else:
             html = response.text
             soup = BeautifulSoup(html, 'html.parser')
@@ -143,6 +145,9 @@ def fetch_kofia_posts():
         for item in data.keys():
             create_page_to_notion_database(data[item], 'KOFIA', new_uids)
 
+    if errors:
+        raise RuntimeError(f"KOFIA fetch failed for {len(errors)} page(s): {'; '.join(errors)}")
+
 
 def fetch_is_posts(type):
     global existing_uids, new_uids
@@ -154,6 +159,7 @@ def fetch_is_posts(type):
 
     if response.status_code != 200:
         print(f"❌ [{datetime.datetime.now()}] ISNotice fetch failed: {response.status_code}")
+        raise RuntimeError(f"ISNotice fetch failed: HTTP {response.status_code}")
     else:
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')
@@ -211,6 +217,7 @@ def fetch_posts(type):
 
     if response.status_code != 200:
         print(f"❌ [{datetime.datetime.now()}] {type} fetch failed: {response.status_code}")
+        raise RuntimeError(f"{type} fetch failed: HTTP {response.status_code}")
     else:
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')
@@ -252,6 +259,7 @@ def fetch_swedu(type):
 
     if response.status_code != 200:
         print(f"❌ [{datetime.datetime.now()}] SWedu fetch failed: {response.status_code}")
+        raise RuntimeError(f"SWedu fetch failed: HTTP {response.status_code}")
     else:
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')
@@ -309,6 +317,7 @@ def fetch_campus_recruitment():
 
     if response.status_code != 200:
         print(f"❌ [{datetime.datetime.now()}] Campus Recruitment fetch failed: {response.status_code}")
+        raise RuntimeError(f"Campus Recruitment fetch failed: HTTP {response.status_code}")
     elif 'autherror' in response.url or '로그인 해주세요' in response.text:
         print("❌ Campus Recruitment requires login")
         print("   Set C_ID and C_PW in environment (or keys.env) and run again.")
