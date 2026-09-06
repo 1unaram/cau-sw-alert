@@ -152,53 +152,54 @@ def fetch_kofia_posts():
 def fetch_is_posts(type):
     global existing_uids, new_uids
 
-    url = 'https://security.cau.ac.kr/board.htm?bbsid=notice'
-
-    response = request_with_retry(requests.get, url)
-    response.encoding = 'euc-kr'
+    url = 'https://security.cau.ac.kr/bbs/board.php?bo_table=sub5_1'
+    response = request_with_retry(requests.get, url, timeout=30)
+    response.encoding = 'utf-8'
 
     if response.status_code != 200:
         print(f"❌ [{datetime.datetime.now()}] ISNotice fetch failed: {response.status_code}")
         raise RuntimeError(f"ISNotice fetch failed: HTTP {response.status_code}")
-    else:
-        html = response.text
-        soup = BeautifulSoup(html, 'html.parser')
-        table = soup.find('table', class_='listTable')
-        tbody = table.find('tbody')
-        rows = tbody.find_all('tr')
 
-        data = {}
-        for row in rows:
-            cols = row.find_all('td')
+    soup = BeautifulSoup(response.text, 'html.parser')
+    tbody = soup.select_one('#bo_list tbody')
+    if tbody is None:
+        raise ValueError('ISNotice list table not found')
 
-            # 공지는 건너뛰기
-            if cols[0].find('img'):
-                continue
+    data = {}
+    for row in tbody.select('tr'):
+        if row.select_one('.empty_table'):
+            continue
+        link = row.select_one('.bo_tit a[href]')
+        category = row.select_one('.bo_cate_link')
+        date_cell = row.select_one('.td_datetime')
+        if link is None or category is None or date_cell is None:
+            raise ValueError('ISNotice row is missing title, category or date')
+        # 개편 후 함께 표시되는 뉴스는 제외하고 고정 공지를 포함한다.
+        if category.get_text(strip=True) != '공지사항':
+            continue
 
-            # [1] 번호
-            uid = 'ISN' + cols[0].text.strip()
-            if uid in existing_uids:
-                continue
+        match = re.search(r'[?&]wr_id=([0-9]+)(?:&|$)', link['href'])
+        if match is None:
+            raise ValueError('ISNotice post URL has an invalid wr_id')
+        # 목록 번호 대신 게시물 ID를 사용하고, 옛 ISN<목록번호>와 구분한다.
+        uid = 'ISN:sub5_1:' + match.group(1)
+        if uid in existing_uids or uid in new_uids:
+            continue
 
-            # [2] 제목
-            title = cols[1].find('a').get_text(strip=True).strip()
+        title = link.get_text(' ', strip=True)
+        if not title:
+            raise ValueError('ISNotice post title is empty')
+        data[uid] = {
+            'title': title,
+            'url': url + '&wr_id=' + match.group(1),
+            'date': datetime.datetime.strptime(
+                date_cell.get_text(strip=True), '%Y-%m-%d'
+            ).date().isoformat(),
+            'uid': uid,
+        }
 
-            # [3] URL
-            post_url = 'https://security.cau.ac.kr/board.htm' + cols[1].find('a')['href']
-
-            # [4] 날짜
-            date = cols[3].get_text(strip=True)
-
-            data[uid] = {
-                'title': title,
-                'url': post_url,
-                'date': datetime.datetime.strptime(date, '%Y.%m.%d').date().isoformat(),
-                'uid': uid
-            }
-
-        if data:
-            for item in data.keys():
-                create_page_to_notion_database(data[item], type, new_uids)
+    for item in data.values():
+        create_page_to_notion_database(item, type, new_uids)
 
 
 def fetch_posts(type):
